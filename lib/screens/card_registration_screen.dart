@@ -5,10 +5,10 @@ class CardRegistrationScreen extends StatefulWidget {
   const CardRegistrationScreen({super.key});
 
   @override
-  _CardRegistrationScreenState createState() => _CardRegistrationScreenState();
+  CardRegistrationScreenState createState() => CardRegistrationScreenState();
 }
 
-class _CardRegistrationScreenState extends State<CardRegistrationScreen>
+class CardRegistrationScreenState extends State<CardRegistrationScreen>
     with SingleTickerProviderStateMixin {
   final _cardNumberController = TextEditingController();
   final _expiryDateController = TextEditingController();
@@ -52,7 +52,7 @@ class _CardRegistrationScreenState extends State<CardRegistrationScreen>
     final String cardNickname = _cardNicknameController.text;
 
     // TODO: Salvar os detalhes do cartão no backend ou localmente.
-    
+
     print("Cartão registrado: Número: $cardNumber, Apelido: $cardNickname, Titular: $cardHolderName, Expiração: $expiryDate, CVV: $cvv");
   }
 

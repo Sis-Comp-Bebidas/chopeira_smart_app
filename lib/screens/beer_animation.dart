@@ -6,10 +6,10 @@ class BeerFillingAnimationScreen extends StatefulWidget {
   const BeerFillingAnimationScreen({super.key});
 
   @override
-  _BeerFillingAnimationScreenState createState() => _BeerFillingAnimationScreenState();
+  BeerFillingAnimationScreenState createState() => BeerFillingAnimationScreenState();
 }
 
-class _BeerFillingAnimationScreenState extends State<BeerFillingAnimationScreen> with TickerProviderStateMixin {
+class BeerFillingAnimationScreenState extends State<BeerFillingAnimationScreen> with TickerProviderStateMixin {
   late AnimationController _waveController; // Controlador para o movimento das ondas
   late AnimationController _fillController; // Controlador para o preenchimento suave
   late Animation<double> _fillAnimation; // Animação para o preenchimento suave
@@ -184,10 +184,10 @@ class AnimatedBubble extends StatefulWidget {
   const AnimatedBubble({super.key, required this.bubble});
 
   @override
-  _AnimatedBubbleState createState() => _AnimatedBubbleState();
+  AnimatedBubbleState createState() => AnimatedBubbleState();
 }
 
-class _AnimatedBubbleState extends State<AnimatedBubble> with SingleTickerProviderStateMixin {
+class AnimatedBubbleState extends State<AnimatedBubble> with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _animationY;
   late Animation<double> _animationX;

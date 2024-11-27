@@ -8,10 +8,10 @@ class DrinkSelectionScreen extends StatefulWidget {
   const DrinkSelectionScreen({super.key});
 
   @override
-  _DrinkSelectionScreenState createState() => _DrinkSelectionScreenState();
+  DrinkSelectionScreenState createState() => DrinkSelectionScreenState();
 }
 
-class _DrinkSelectionScreenState extends State<DrinkSelectionScreen>
+class DrinkSelectionScreenState extends State<DrinkSelectionScreen>
     with TickerProviderStateMixin {
   final List<Map<String, dynamic>> drinks = [
     {

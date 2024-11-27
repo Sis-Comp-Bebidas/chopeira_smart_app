@@ -14,10 +14,10 @@ class CreditPurchaseScreen extends StatefulWidget {
   const CreditPurchaseScreen({super.key, required this.amplifyConfigured});
 
   @override
-  _CreditPurchaseScreenState createState() => _CreditPurchaseScreenState();
+  CreditPurchaseScreenState createState() => CreditPurchaseScreenState();
 }
 
-class _CreditPurchaseScreenState extends State<CreditPurchaseScreen>
+class CreditPurchaseScreenState extends State<CreditPurchaseScreen>
     with SingleTickerProviderStateMixin {
   int _selectedIndex = 0;
   final PageController _pageController = PageController();

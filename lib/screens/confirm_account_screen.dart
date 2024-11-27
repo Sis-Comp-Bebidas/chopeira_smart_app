@@ -8,10 +8,10 @@ class ConfirmAccountScreen extends StatefulWidget {
   const ConfirmAccountScreen({super.key, required this.email});
 
   @override
-  _ConfirmAccountScreenState createState() => _ConfirmAccountScreenState();
+  ConfirmAccountScreenState createState() => ConfirmAccountScreenState();
 }
 
-class _ConfirmAccountScreenState extends State<ConfirmAccountScreen>
+class ConfirmAccountScreenState extends State<ConfirmAccountScreen>
     with SingleTickerProviderStateMixin {
   final _confirmationCodeController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
