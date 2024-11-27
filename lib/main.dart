@@ -9,6 +9,7 @@ import 'screens/card_registration_screen.dart';
 import 'screens/beer_animation.dart';
 import 'screens/history_screen.dart';
 import 'screens/drink_selection_screen.dart';
+import 'package:logger/logger.dart';
 
 void main() {
   runApp(ChopeiraSmartApp());
@@ -22,6 +23,7 @@ class ChopeiraSmartApp extends StatefulWidget {
 }
 
 class ChopeiraSmartAppState extends State<ChopeiraSmartApp> with WidgetsBindingObserver {
+  final Logger logger = Logger();  // Instância do logger para registrar mensagens
   bool _amplifyConfigured = false;
 
   @override
@@ -48,9 +50,9 @@ class ChopeiraSmartAppState extends State<ChopeiraSmartApp> with WidgetsBindingO
   Future<void> _signOutUser() async {
     try {
       await Amplify.Auth.signOut();
-      print('Usuário deslogado com sucesso');
+      logger.i('Usuário deslogado com sucesso');   // Log informativo
     } catch (e) {
-      print('Erro ao deslogar usuário: $e');
+      logger.e('Erro ao deslogar usuário: $e');    // Log de erro
     }
   }
 
@@ -65,8 +67,9 @@ class ChopeiraSmartAppState extends State<ChopeiraSmartApp> with WidgetsBindingO
       setState(() {
         _amplifyConfigured = true; // Amplify foi configurado com sucesso
       });
+      logger.i('Amplify configurado com sucesso'); // Log informativo
     } catch (e) {
-      print('Erro ao configurar o Amplify: $e');
+      logger.e('Erro ao configurar o Amplify: $e'); // Log de erro
     }
   }
 
