@@ -18,10 +18,10 @@ class ChopeiraSmartApp extends StatefulWidget {
   const ChopeiraSmartApp({super.key});
 
   @override
-  _ChopeiraSmartAppState createState() => _ChopeiraSmartAppState();
+  ChopeiraSmartAppState createState() => ChopeiraSmartAppState();
 }
 
-class _ChopeiraSmartAppState extends State<ChopeiraSmartApp> with WidgetsBindingObserver {
+class ChopeiraSmartAppState extends State<ChopeiraSmartApp> with WidgetsBindingObserver {
   bool _amplifyConfigured = false;
 
   @override
