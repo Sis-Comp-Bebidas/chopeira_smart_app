@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:amplify_flutter/amplify_flutter.dart'; // Para usar o Amplify Auth
 import 'login_screen.dart'; // Tela de login para redirecionar após logout
+import 'package:logger/logger.dart'; // Para usar o logger
 
 class AccountScreen extends StatefulWidget {
   final bool amplifyConfigured;  // Recebe o estado de configuração do Amplify
@@ -8,10 +9,11 @@ class AccountScreen extends StatefulWidget {
   const AccountScreen({super.key, required this.amplifyConfigured});  // Construtor para receber amplifyConfigured
 
   @override
-  _AccountScreenState createState() => _AccountScreenState();
+  AccountScreenState createState() => AccountScreenState();
 }
 
-class _AccountScreenState extends State<AccountScreen> with SingleTickerProviderStateMixin {
+class AccountScreenState extends State<AccountScreen> with SingleTickerProviderStateMixin {
+  final Logger logger = Logger();  // Instância do logger para registrar mensagens
   late AnimationController _animationController;
   late Animation<Color?> _buttonColorAnimation;
 
@@ -43,7 +45,7 @@ class _AccountScreenState extends State<AccountScreen> with SingleTickerProvider
         MaterialPageRoute(builder: (context) => LoginScreen(amplifyConfigured: widget.amplifyConfigured)),
       );
     } catch (e) {
-      print('Erro ao deslogar: $e');
+      logger.e('Erro ao deslogar: $e');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Erro ao deslogar: $e')),
       );
