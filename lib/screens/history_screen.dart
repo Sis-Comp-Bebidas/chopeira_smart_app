@@ -8,7 +8,7 @@ class HistoryScreen extends StatelessWidget {
     {'date': '2024-08-15', 'drink': 'Lager', 'amount': '400ml', 'price': 'R\$ 12,00'},
   ];
 
-  const HistoryScreen({super.key});
+  HistoryScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
