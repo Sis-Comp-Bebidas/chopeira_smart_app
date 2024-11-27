@@ -52,7 +52,7 @@ class _CardRegistrationScreenState extends State<CardRegistrationScreen>
     final String cardNickname = _cardNicknameController.text;
 
     // TODO: Salvar os detalhes do cartão no backend ou localmente.
-    print("Cartão registrado: $cardNickname");
+    print("Cartão registrado: Número: $cardNumber, Apelido: $cardNickname, Titular: $cardHolderName, Expiração: $expiryDate, CVV: $cvv");
   }
 
   @override
