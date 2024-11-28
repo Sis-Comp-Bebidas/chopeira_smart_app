@@ -68,10 +68,12 @@ class DrinkSelectionScreenState extends State<DrinkSelectionScreen>
       ].request();
 
       if (status.values.any((perm) => perm.isDenied)) {
+        if (!mounted) return;
         _showPermissionDeniedDialog();
         return;
       }
 
+      if (!mounted) return;
       setState(() {
         _connectionStatus = "Buscando dispositivos Bluetooth...";
       });
@@ -84,19 +86,32 @@ class DrinkSelectionScreenState extends State<DrinkSelectionScreen>
       );
 
       connection = await BluetoothConnection.toAddress(hc05.address);
+
+      if (!mounted) return;
       setState(() {
         _connectionStatus = "Conectado ao HC-05!";
       });
 
       _listenToBluetoothData();
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _connectionStatus = "Erro ao conectar: $e";
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Erro ao conectar ao Bluetooth: $e")),
-      );
+
+      if (!mounted) return;
+      _showSnackBarSafely("Erro ao conectar ao bluetooth: $e");
     }
+  }
+
+  void _showSnackBarSafely(String message) {
+    if (!mounted) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message)),
+      );
+    });
   }
 
   void _listenToBluetoothData() {
@@ -111,48 +126,58 @@ class DrinkSelectionScreenState extends State<DrinkSelectionScreen>
         logger.i('Mensagem recebida: $message');
 
         if (message.startsWith("Temperatura:")) {
-          final temp = message
-              .split(":")[1]
-              .replaceAll(RegExp(r'[^\d.]'), '')
-              .trim();
-          setState(() {
-            _temperature = "$temp °C";
-          });
+          final temp =
+              message.split(":")[1].replaceAll(RegExp(r'[^\d.]'), '').trim();
+          if (mounted) {
+            setState(() {
+              _temperature = "$temp °C";
+            });
+          }
         } else if (message.startsWith("Fluxo:")) {
           final flow = message
               .split(":")[1]
-              .replaceAll(RegExp(r'[^\d.]'), '') // Remove caracteres indesejados
+              .replaceAll(
+                  RegExp(r'[^\d.]'), '') // Remove caracteres indesejados
               .trim();
-          setState(() {
-            _flowRate = double.tryParse(flow) ?? 0.0; // Atualiza o fluxo em L/min
-            logger.i('Fluxo recebido: $_flowRate L/min');
-          });
+          if (mounted) {
+            setState(() {
+              _flowRate =
+                  double.tryParse(flow) ?? 0.0; // Atualiza o fluxo em L/min
+              logger.i('Fluxo recebido: $_flowRate L/min');
+            });
+          }
         } else if (message.startsWith("Volume:")) {
           final volume = message
               .split(":")[1]
-              .replaceAll(RegExp(r'[^\d.]'), '') // Remove caracteres indesejados
+              .replaceAll(
+                  RegExp(r'[^\d.]'), '') // Remove caracteres indesejados
               .trim();
-          setState(() {
-            _volume = double.tryParse(volume) ?? 0.0; // Atualiza o volume total
-            // Atualiza os créditos
-            _credits -= (_volume * _price) / 1000;
-            if (_credits < 0) _credits = 0;
-            logger.i('Volume recebido: $_volume mL');
-          });
+          if (mounted) {
+            setState(() {
+              _volume =
+                  double.tryParse(volume) ?? 0.0; // Atualiza o volume total
+              // Atualiza os créditos
+              _credits -= (_volume * _price) / 1000;
+              if (_credits < 0) _credits = 0;
+              logger.i('Volume recebido: $_volume mL');
+            });
+          }
         } else if (message.startsWith("Créditos:")) {
           final credit = message.split(":")[1].trim();
-          setState(() {
-            _credits = double.tryParse(credit) ?? 0.0;
-          });
+          if (mounted) {
+            setState(() {
+              _credits = double.tryParse(credit) ?? 0.0;
+            });
+          }
         }
       }
     }).onDone(() {
-      setState(() {
-        _connectionStatus = "Conexão encerrada.";
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Conexão Bluetooth encerrada.")),
-      );
+      if (mounted) {
+        setState(() {
+          _connectionStatus = "Conexão encerrada.";
+        });
+        _showSnackBarSafely("Conexão Bluetooth encerrada.");
+      }
     });
   }
 
@@ -171,7 +196,8 @@ class DrinkSelectionScreenState extends State<DrinkSelectionScreen>
   void _selectDrink(int index) {
     if (_credits <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Créditos insuficientes para abrir a solenoide.")),
+        SnackBar(
+            content: Text("Créditos insuficientes para abrir a solenoide.")),
       );
       return;
     }
@@ -358,8 +384,7 @@ class DrinkSelectionScreenState extends State<DrinkSelectionScreen>
                       Text("Preço por mL: R\$ ${_price.toStringAsFixed(2)}",
                           style: TextStyle(fontSize: 18)),
                       Text("Créditos: R\$ ${_credits.toStringAsFixed(2)}",
-                          style: TextStyle(
-                              fontSize: 18, color: Colors.green)),
+                          style: TextStyle(fontSize: 18, color: Colors.green)),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
