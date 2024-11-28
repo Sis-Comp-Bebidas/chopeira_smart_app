@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'beer_filling_animation_without_logo.dart'; // Import da animação
 import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:logger/logger.dart';
 
 class DrinkSelectionScreen extends StatefulWidget {
   const DrinkSelectionScreen({super.key});
@@ -13,6 +14,7 @@ class DrinkSelectionScreen extends StatefulWidget {
 
 class DrinkSelectionScreenState extends State<DrinkSelectionScreen>
     with TickerProviderStateMixin {
+  final Logger logger = Logger();
   final List<Map<String, dynamic>> drinks = [
     {
       "name": "Chopp Brahma",
@@ -106,7 +108,7 @@ class DrinkSelectionScreenState extends State<DrinkSelectionScreen>
         final message = _buffer.substring(0, index).trim();
         _buffer = _buffer.substring(index + 1);
 
-        print('Mensagem recebida: $message');
+        logger.i('Mensagem recebida: $message');
 
         if (message.startsWith("Temperatura:")) {
           final temp = message
@@ -123,7 +125,7 @@ class DrinkSelectionScreenState extends State<DrinkSelectionScreen>
               .trim();
           setState(() {
             _flowRate = double.tryParse(flow) ?? 0.0; // Atualiza o fluxo em L/min
-            print('Fluxo recebido: $_flowRate L/min');
+            logger.i('Fluxo recebido: $_flowRate L/min');
           });
         } else if (message.startsWith("Volume:")) {
           final volume = message
@@ -135,7 +137,7 @@ class DrinkSelectionScreenState extends State<DrinkSelectionScreen>
             // Atualiza os créditos
             _credits -= (_volume * _price) / 1000;
             if (_credits < 0) _credits = 0;
-            print('Volume recebido: $_volume mL');
+            logger.i('Volume recebido: $_volume mL');
           });
         } else if (message.startsWith("Créditos:")) {
           final credit = message.split(":")[1].trim();
@@ -158,7 +160,7 @@ class DrinkSelectionScreenState extends State<DrinkSelectionScreen>
     if (connection != null && connection!.isConnected) {
       connection?.output.add(Uint8List.fromList(command.codeUnits));
       connection?.output.allSent;
-      print("Comando enviado: $command");
+      logger.i("Comando enviado: $command");
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Bluetooth não conectado.")),

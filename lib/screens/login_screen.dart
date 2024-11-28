@@ -7,6 +7,7 @@ import 'dart:convert';
 import 'credit_purchase_screen.dart'; // Tela de compra de créditos
 import 'create_account_screen.dart'; // Tela de criar conta
 import 'app_logo.dart'; // Logo personalizada
+import 'package:logger/logger.dart';
 
 class LoginScreen extends StatefulWidget {
   final bool amplifyConfigured;
@@ -24,6 +25,7 @@ class LoginScreenState extends State<LoginScreen>
 
   late AnimationController _animationController;
   late Animation<Color?> _buttonColorAnimation;
+  final Logger logger = Logger();
 
   @override
   void initState() {
@@ -65,12 +67,12 @@ class LoginScreenState extends State<LoginScreen>
       if (response.statusCode == 200) {
         // Sucesso na requisição
         final responseData = jsonDecode(response.body);
-        print('Resposta da API: $responseData');
+        logger.i('Resposta da API: $responseData');
       } else {
-        print('Erro ao enviar a requisição: ${response.statusCode}');
+        logger.e('Erro ao enviar a requisição: ${response.statusCode}');
       }
     } catch (e) {
-      print('Erro ao enviar o token JWT e os dados para a API Gateway: $e');
+      logger.e('Erro ao enviar o token JWT e os dados para a API Gateway: $e');
     }
   }
 
@@ -184,7 +186,7 @@ Future<void> _loginUser() async {
       );
     }
   } catch (e) {
-    print('Erro ao fazer login: $e');
+    logger.e('Erro ao fazer login: $e');
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('Não foi possível realizar o login. Por favor, tente novamente.')),
     );

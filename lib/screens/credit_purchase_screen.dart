@@ -7,6 +7,7 @@ import 'package:amplify_auth_cognito/amplify_auth_cognito.dart';
 import 'card_registration_screen.dart';
 import 'account_screen.dart'; // Tela de Conta
 import 'drink_selection_screen.dart';
+import 'package:logger/logger.dart';
 
 class CreditPurchaseScreen extends StatefulWidget {
   final bool amplifyConfigured;
@@ -25,6 +26,7 @@ class CreditPurchaseScreenState extends State<CreditPurchaseScreen>
 
   late AnimationController _animationController;
   late Animation<Color?> _buttonColorAnimation;
+  final Logger logger = Logger();
 
   // Lista de cartões registrados (exemplo estático)
   final List<String> _registeredCards = ['Cartão Pessoal', 'Cartão Empresarial']; 
@@ -92,16 +94,16 @@ class CreditPurchaseScreenState extends State<CreditPurchaseScreen>
               userCredits = data['creditos'];
             });
           } else {
-            print('Erro ao buscar créditos: ${response.statusCode}');
+            logger.e('Erro ao buscar créditos: ${response.statusCode}');
           }
         } else {
-          print('Tokens não disponíveis.');
+          logger.i('Tokens não disponíveis.');
         }
       } else {
-        print('Usuário não está autenticado.');
+        logger.i('Usuário não está autenticado.');
       }
     } catch (e) {
-      print('Erro ao buscar créditos: $e');
+      logger.e('Erro ao buscar créditos: $e');
     }
   }
 

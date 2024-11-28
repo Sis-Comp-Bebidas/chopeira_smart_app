@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:amplify_flutter/amplify_flutter.dart';
 import 'credit_purchase_screen.dart';
+import 'package:logger/logger.dart';
 
 class ConfirmAccountScreen extends StatefulWidget {
   final String email; // O email do usuário será passado para a confirmação
@@ -18,6 +19,7 @@ class ConfirmAccountScreenState extends State<ConfirmAccountScreen>
 
   late AnimationController _animationController;
   late Animation<Color?> _buttonColorAnimation;
+  final Logger logger = Logger();
 
   @override
   void initState() {
@@ -59,7 +61,7 @@ class ConfirmAccountScreenState extends State<ConfirmAccountScreen>
           );
         }
       } catch (e) {
-        print('Erro ao confirmar conta: $e');
+        logger.e('Erro ao confirmar conta: $e');
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Erro ao confirmar a conta: $e')),
         );

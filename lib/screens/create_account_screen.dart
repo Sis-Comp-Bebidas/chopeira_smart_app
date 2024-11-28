@@ -5,6 +5,7 @@ import 'package:amplify_flutter/amplify_flutter.dart';
 import 'package:amplify_auth_cognito/amplify_auth_cognito.dart';
 import 'package:chopeira_smart_app/screens/confirm_account_screen.dart';
 import 'package:flutter/services.dart';
+import 'package:logger/logger.dart';
 
 class CreateAccountScreen extends StatefulWidget {
   const CreateAccountScreen({super.key});
@@ -25,6 +26,7 @@ class CreateAccountScreenState extends State<CreateAccountScreen>
 
   late AnimationController _animationController;
   late Animation<Color?> _buttonColorAnimation;
+  final Logger logger = Logger();
 
   @override
   void initState() {
@@ -108,7 +110,7 @@ class CreateAccountScreenState extends State<CreateAccountScreen>
           );
         }
       } catch (e) {
-        print('Erro ao registrar: $e');
+        logger.e('Erro ao registrar: $e');
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Erro ao cadastrar: $e')),
         );
@@ -121,11 +123,11 @@ class CreateAccountScreenState extends State<CreateAccountScreen>
   }
 
   void _openTermsOfUse() {
-    print("Abrir Termos de Uso");
+    logger.i("Abrir Termos de Uso");
   }
 
   void _openPrivacyPolicy() {
-    print("Abrir Políticas de Privacidade");
+    logger.i("Abrir Políticas de Privacidade");
   }
 
   @override

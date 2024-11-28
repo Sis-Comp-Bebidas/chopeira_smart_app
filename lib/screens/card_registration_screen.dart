@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:logger/logger.dart';
 
 // Tela de cadastro de cartão como um StatefulWidget para gerenciar o estado dos campos de entrada
 class CardRegistrationScreen extends StatefulWidget {
@@ -18,6 +19,7 @@ class CardRegistrationScreenState extends State<CardRegistrationScreen>
 
   late AnimationController _animationController;
   late Animation<Color?> _buttonColorAnimation;
+  final Logger logger = Logger();
 
   @override
   void initState() {
@@ -53,7 +55,7 @@ class CardRegistrationScreenState extends State<CardRegistrationScreen>
 
     // TODO: Salvar os detalhes do cartão no backend ou localmente.
 
-    print("Cartão registrado: Número: $cardNumber, Apelido: $cardNickname, Titular: $cardHolderName, Expiração: $expiryDate, CVV: $cvv");
+    logger.i("Cartão registrado: Número: $cardNumber, Apelido: $cardNickname, Titular: $cardHolderName, Expiração: $expiryDate, CVV: $cvv");
   }
 
   @override
