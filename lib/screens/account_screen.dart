@@ -4,16 +4,20 @@ import 'login_screen.dart'; // Tela de login para redirecionar após logout
 import 'package:logger/logger.dart'; // Para usar o logger
 
 class AccountScreen extends StatefulWidget {
-  final bool amplifyConfigured;  // Recebe o estado de configuração do Amplify
+  final bool amplifyConfigured; // Recebe o estado de configuração do Amplify
 
-  const AccountScreen({super.key, required this.amplifyConfigured});  // Construtor para receber amplifyConfigured
+  const AccountScreen(
+      {super.key,
+      required this.amplifyConfigured}); // Construtor para receber amplifyConfigured
 
   @override
   AccountScreenState createState() => AccountScreenState();
 }
 
-class AccountScreenState extends State<AccountScreen> with SingleTickerProviderStateMixin {
-  final Logger logger = Logger();  // Instância do logger para registrar mensagens
+class AccountScreenState extends State<AccountScreen>
+    with SingleTickerProviderStateMixin {
+  final Logger logger =
+      Logger(); // Instância do logger para registrar mensagens
   late AnimationController _animationController;
   late Animation<Color?> _buttonColorAnimation;
 
@@ -37,20 +41,38 @@ class AccountScreenState extends State<AccountScreen> with SingleTickerProviderS
   }
 
   // Função para realizar o logout usando Amplify Auth e redirecionar para a tela de login
-  Future<void> _logout(BuildContext context) async {
+  Future<void> _logout() async {
     try {
-      await Amplify.Auth.signOut();  // Desloga o usuário do Cognito
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => LoginScreen(amplifyConfigured: widget.amplifyConfigured)),
-      );
+      await Amplify.Auth.signOut(); // Desloga o usuário do Cognito
+
+      if (!mounted) return; // Verifica se o widget está montado antes de navegar
+
+      _navigateToLogin(); // Navega para a tela de login
     } catch (e) {
       logger.e('Erro ao deslogar: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erro ao deslogar: $e')),
-      );
+
+      if (!mounted) return; // Verifica se o widget está montado antes de exibir a mensagem
+
+      _showLogoutError(e); // Exibe mensagem de erro
     }
   }
+
+  // Método auxiliar para navegação
+  void _navigateToLogin() {
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (context) => LoginScreen(amplifyConfigured: widget.amplifyConfigured),
+      ),
+    );
+  }
+
+// Método auxiliar para exibir mensagem de erro
+void _showLogoutError(dynamic error) {
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(content: Text('Erro ao deslogar: $error')),
+  );
+}
 
   @override
   Widget build(BuildContext context) {
@@ -71,14 +93,15 @@ class AccountScreenState extends State<AccountScreen> with SingleTickerProviderS
             SizedBox(height: 10),
             Text('Email: joao.silva@email.com', style: TextStyle(fontSize: 18)),
             SizedBox(height: 10),
-            Text('Data de Nascimento: 10/05/1985', style: TextStyle(fontSize: 18)),
+            Text('Data de Nascimento: 10/05/1985',
+                style: TextStyle(fontSize: 18)),
             SizedBox(height: 40),
             // Botão de logout com animação
             GestureDetector(
               onTapDown: (_) => _animationController.forward(),
               onTapUp: (_) {
                 _animationController.reverse();
-                _logout(context);  // Chama a função de logout
+                _logout(); // Chama a função de logout
               },
               child: AnimatedBuilder(
                 animation: _buttonColorAnimation,
@@ -90,9 +113,10 @@ class AccountScreenState extends State<AccountScreen> with SingleTickerProviderS
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12.0),
                       ),
-                      padding: EdgeInsets.symmetric(vertical: 17, horizontal: 27),
+                      padding:
+                          EdgeInsets.symmetric(vertical: 17, horizontal: 27),
                     ),
-                    onPressed: () => _logout(context),  // Logout com Amplify
+                    onPressed: () => _logout(), // Logout com Amplify
                     child: Text(
                       'SAIR',
                       style: TextStyle(

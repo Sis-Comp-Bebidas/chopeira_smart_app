@@ -68,17 +68,18 @@ class BeerFillingAnimationScreenState extends State<BeerFillingAnimationScreen> 
       _logoController.forward();
       // Quando o preenchimento atingir o topo, navega para a próxima tela
       Future.delayed(Duration(seconds: 1), () {
-        Navigator.pushReplacementNamed(context, '/login');
+        if (mounted) {
+          Navigator.pushReplacementNamed(context, '/login');
+        }
       });
     });
   
-         // Ajusta o ponto de início da logo para 0,37 (um pouco antes)
+    // Ajusta o ponto de início da logo para 0,37 (um pouco antes)
     _fillController.addListener(() {
        if (_fillController.value >= 0.42 && !_logoController.isAnimating) {
          _logoController.forward();
        }
     });
-
   }
 
   @override

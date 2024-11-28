@@ -55,7 +55,8 @@ class CreateAccountScreenState extends State<CreateAccountScreen>
     if (value == null || value.isEmpty) {
       return 'O campo Senha é obrigatório';
     }
-    String pattern = r'^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#])[A-Za-z\d@$!%*?&#]{8,}$';
+    String pattern =
+        r'^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#])[A-Za-z\d@$!%*?&#]{8,}$';
     RegExp regex = RegExp(pattern);
     if (!regex.hasMatch(value)) {
       return 'A senha deve ter pelo menos 8 caracteres,\ncom uma letra maiúscula, um número e um símbolo';
@@ -101,24 +102,38 @@ class CreateAccountScreenState extends State<CreateAccountScreen>
           }),
         );
         if (res.isSignUpComplete || !res.isSignUpComplete) {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(
-              builder: (context) => ConfirmAccountScreen(email: _emailController.text.trim()),
-            ),
-          );
+          if (!mounted) return;
+          _navigateToConfirmAccountScreen();
         }
       } catch (e) {
         logger.e('Erro ao registrar: $e');
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erro ao cadastrar: $e')),
-        );
+
+        if (!mounted) return;
+        _showErrorSnackBar('Erro ao registrar: $e');
       }
     } else if (!_isChecked) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Você deve aceitar os Termos de Uso e Políticas de Privacidade.')),
-      );
+      _showErrorSnackBar('Você deve aceitar os Termos de Uso e Políticas de Privacidade');
     }
+  }
+
+  // Método auxiliar para navegação
+  void _navigateToConfirmAccountScreen() {
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ConfirmAccountScreen(email: _emailController.text.trim()),
+      ),
+    );
+  }
+
+  // Método auxiliar para exibir mensagem de erro
+  void _showErrorSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.red,
+      ),
+    );
   }
 
   void _openTermsOfUse() {
@@ -191,7 +206,8 @@ class CreateAccountScreenState extends State<CreateAccountScreen>
                             validator: (value) {
                               if (value == null || value.isEmpty) {
                                 return 'O campo Email é obrigatório';
-                              } else if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
+                              } else if (!RegExp(r'^[^@]+@[^@]+\.[^@]+')
+                                  .hasMatch(value)) {
                                 return 'Por favor, insira um email válido';
                               }
                               return null;
@@ -227,16 +243,20 @@ class CreateAccountScreenState extends State<CreateAccountScreen>
                             inputFormatters: [
                               FilteringTextInputFormatter.digitsOnly,
                               LengthLimitingTextInputFormatter(8),
-                              TextInputFormatter.withFunction((oldValue, newValue) {
+                              TextInputFormatter.withFunction(
+                                  (oldValue, newValue) {
                                 String text = newValue.text;
                                 if (text.length >= 2 && text.length < 5) {
-                                  text = '${text.substring(0, 2)}/${text.substring(2)}';
+                                  text =
+                                      '${text.substring(0, 2)}/${text.substring(2)}';
                                 } else if (text.length >= 5) {
-                                  text = '${text.substring(0, 2)}/${text.substring(2, 4)}/${text.substring(4)}';
+                                  text =
+                                      '${text.substring(0, 2)}/${text.substring(2, 4)}/${text.substring(4)}';
                                 }
                                 return TextEditingValue(
                                   text: text,
-                                  selection: TextSelection.collapsed(offset: text.length),
+                                  selection: TextSelection.collapsed(
+                                      offset: text.length),
                                 );
                               }),
                             ],
@@ -258,16 +278,20 @@ class CreateAccountScreenState extends State<CreateAccountScreen>
                             inputFormatters: [
                               FilteringTextInputFormatter.digitsOnly,
                               LengthLimitingTextInputFormatter(11),
-                              TextInputFormatter.withFunction((oldValue, newValue) {
+                              TextInputFormatter.withFunction(
+                                  (oldValue, newValue) {
                                 String text = newValue.text;
                                 if (text.length >= 6) {
-                                  text = '${text.substring(0, 2)} ${text.substring(2, 7)}-${text.substring(7)}';
+                                  text =
+                                      '${text.substring(0, 2)} ${text.substring(2, 7)}-${text.substring(7)}';
                                 } else if (text.length >= 2) {
-                                  text = '${text.substring(0, 2)} ${text.substring(2)}';
+                                  text =
+                                      '${text.substring(0, 2)} ${text.substring(2)}';
                                 }
                                 return TextEditingValue(
                                   text: text,
-                                  selection: TextSelection.collapsed(offset: text.length),
+                                  selection: TextSelection.collapsed(
+                                      offset: text.length),
                                 );
                               }),
                             ],
@@ -293,7 +317,8 @@ class CreateAccountScreenState extends State<CreateAccountScreen>
                               Expanded(
                                 child: RichText(
                                   text: TextSpan(
-                                    text: 'Declaro que tenho mais de 18 anos, li e aceito os ',
+                                    text:
+                                        'Declaro que tenho mais de 18 anos, li e aceito os ',
                                     style: TextStyle(color: Colors.black),
                                     children: [
                                       TextSpan(
@@ -303,7 +328,8 @@ class CreateAccountScreenState extends State<CreateAccountScreen>
                                           fontWeight: FontWeight.bold,
                                           decoration: TextDecoration.underline,
                                         ),
-                                        recognizer: TapGestureRecognizer()..onTap = _openTermsOfUse,
+                                        recognizer: TapGestureRecognizer()
+                                          ..onTap = _openTermsOfUse,
                                       ),
                                       TextSpan(
                                         text: ' e ',
@@ -316,7 +342,8 @@ class CreateAccountScreenState extends State<CreateAccountScreen>
                                           fontWeight: FontWeight.bold,
                                           decoration: TextDecoration.underline,
                                         ),
-                                        recognizer: TapGestureRecognizer()..onTap = _openPrivacyPolicy,
+                                        recognizer: TapGestureRecognizer()
+                                          ..onTap = _openPrivacyPolicy,
                                       ),
                                       TextSpan(
                                         text: '.',
@@ -341,11 +368,13 @@ class CreateAccountScreenState extends State<CreateAccountScreen>
                                 return ElevatedButton(
                                   style: ElevatedButton.styleFrom(
                                     foregroundColor: Colors.black,
-                                    backgroundColor: _buttonColorAnimation.value,
+                                    backgroundColor:
+                                        _buttonColorAnimation.value,
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(12.0),
                                     ),
-                                    padding: EdgeInsets.symmetric(vertical: 17, horizontal: 27),
+                                    padding: EdgeInsets.symmetric(
+                                        vertical: 17, horizontal: 27),
                                   ),
                                   onPressed: _registerUser,
                                   child: Text(

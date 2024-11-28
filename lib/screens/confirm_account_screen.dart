@@ -51,22 +51,36 @@ class ConfirmAccountScreenState extends State<ConfirmAccountScreen>
         );
 
         if (res.isSignUpComplete) {
-          // Navega para a tela de compra de créditos após a confirmação
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(
-              builder: (context) =>
-                  CreditPurchaseScreen(amplifyConfigured: true),
-            ),
-          );
+          if (!mounted) return; // Verifica se o widget ainda está montado
+
+          _navigateToCreditPurchaseScreen(); // Navega para a próxima tela
         }
       } catch (e) {
         logger.e('Erro ao confirmar conta: $e');
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erro ao confirmar a conta: $e')),
-        );
+
+        if (!mounted) return; // Verifica se o widget ainda está montado
+
+        _showErrorSnackBar(
+            'Erro ao confirmar a conta: $e'); // Exibe mensagem de erro
       }
     }
+  }
+
+  // Método auxiliar para navegação
+  void _navigateToCreditPurchaseScreen() {
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (context) => CreditPurchaseScreen(amplifyConfigured: true),
+      ),
+    );
+  }
+
+  // Método auxiliar para exibir mensagens de erro
+  void _showErrorSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
   }
 
   @override
@@ -123,8 +137,8 @@ class ConfirmAccountScreenState extends State<ConfirmAccountScreen>
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12.0),
                         ),
-                        padding: EdgeInsets.symmetric(
-                            vertical: 17, horizontal: 27),
+                        padding:
+                            EdgeInsets.symmetric(vertical: 17, horizontal: 27),
                       ),
                       onPressed: _confirmSignUp,
                       child: Text(
