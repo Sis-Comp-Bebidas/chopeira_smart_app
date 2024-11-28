@@ -91,12 +91,13 @@ class CreateAccountScreenState extends State<CreateAccountScreen>
   Future<void> _registerUser() async {
     if (_formKey.currentState?.validate() == true && _isChecked) {
       try {
+        String formattedPhone = '+55${_phoneController.text.trim().replaceAll(RegExp(r'\D'), '')}';
         SignUpResult res = await Amplify.Auth.signUp(
           username: _emailController.text.trim(),
           password: _passwordController.text.trim(),
           options: SignUpOptions(userAttributes: {
             CognitoUserAttributeKey.email: _emailController.text.trim(),
-            CognitoUserAttributeKey.phoneNumber: _phoneController.text.trim(),
+            CognitoUserAttributeKey.phoneNumber: formattedPhone,
             CognitoUserAttributeKey.name: _firstNameController.text.trim(),
             CognitoUserAttributeKey.birthdate: _dobController.text.trim(),
           }),
@@ -280,6 +281,7 @@ class CreateAccountScreenState extends State<CreateAccountScreen>
                               LengthLimitingTextInputFormatter(11),
                               TextInputFormatter.withFunction(
                                   (oldValue, newValue) {
+                                // Adiciona a máscara com o formato (DDD + número)
                                 String text = newValue.text;
                                 if (text.length >= 6) {
                                   text =
@@ -298,6 +300,8 @@ class CreateAccountScreenState extends State<CreateAccountScreen>
                             validator: (value) {
                               if (value == null || value.isEmpty) {
                                 return 'O campo Telefone é obrigatório';
+                              } else if (value.length < 13) {
+                                return 'O telefone deve incluir o DDD e o número completo';
                               }
                               return null;
                             },
