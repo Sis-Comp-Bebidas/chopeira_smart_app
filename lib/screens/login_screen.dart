@@ -76,123 +76,147 @@ class LoginScreenState extends State<LoginScreen>
     }
   }
 
-  // Função de login usando o Amplify Auth
-Future<void> _loginUser() async {
-  if (!widget.amplifyConfigured) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('O sistema está sendo configurado. Tente novamente em breve.')),
-    );
-    return;
-  }
-
-  if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Por favor, preencha seu e-mail e senha.')),
-    );
-    return;
-  }
-
-  try {
-    // Faz o login com o Cognito
-    SignInResult result = await Amplify.Auth.signIn(
-      username: _emailController.text.trim(),
-      password: _passwordController.text.trim(),
-    );
-
-    if (result.isSignedIn) {
-      // Obtém a sessão do usuário para acessar o token JWT
-      var session = await Amplify.Auth.fetchAuthSession() as CognitoAuthSession;
-
-      // ignore: unnecessary_null_comparison
-      if (session.userPoolTokensResult.value != null) {
-        String jwtToken = session.userPoolTokensResult.value.idToken.raw;
-
-        var userAttributes = await Amplify.Auth.fetchUserAttributes();
-
-        var subAttribute = userAttributes.firstWhere(
-          (attr) => attr.userAttributeKey == AuthUserAttributeKey.sub,
-          orElse: () => AuthUserAttribute(
-              userAttributeKey: AuthUserAttributeKey.sub, value: ''),
-        );
-
-        if (subAttribute.value.isNotEmpty) {
-          String userId = subAttribute.value;
-          String name = userAttributes
-              .firstWhere(
-                (attr) => attr.userAttributeKey == AuthUserAttributeKey.name,
-                orElse: () => AuthUserAttribute(
-                    userAttributeKey: AuthUserAttributeKey.name, value: ''),
-              )
-              .value;
-          String email = userAttributes
-              .firstWhere(
-                (attr) => attr.userAttributeKey == AuthUserAttributeKey.email,
-                orElse: () => AuthUserAttribute(
-                    userAttributeKey: AuthUserAttributeKey.email, value: ''),
-              )
-              .value;
-          String birthdate = userAttributes
-              .firstWhere(
-                (attr) =>
-                    attr.userAttributeKey == AuthUserAttributeKey.birthdate,
-                orElse: () => AuthUserAttribute(
-                    userAttributeKey: AuthUserAttributeKey.birthdate,
-                    value: ''),
-              )
-              .value;
-          String phoneNumber = userAttributes
-              .firstWhere(
-                (attr) =>
-                    attr.userAttributeKey == AuthUserAttributeKey.phoneNumber,
-                orElse: () => AuthUserAttribute(
-                    userAttributeKey: AuthUserAttributeKey.phoneNumber,
-                    value: ''),
-              )
-              .value;
-
-          Map<String, dynamic> requestBody = {
-            "userId": userId,
-            "payload": {
-              "name": name,
-              "email": email,
-              "birthdate": birthdate,
-              "phone_number": phoneNumber,
-            }
-          };
-
-          String jsonBody = jsonEncode(requestBody);
-
-          await _sendJwtToApiGateway(jwtToken, jsonBody);
-
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(
-                builder: (context) => CreditPurchaseScreen(
-                    amplifyConfigured: widget.amplifyConfigured)),
-          );
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Não foi possível obter suas informações. Tente novamente.')),
-          );
-        }
-      } else {
+// Função de login usando o Amplify Auth
+  Future<void> _loginUser() async {
+    if (!widget.amplifyConfigured) {
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Não conseguimos fazer o login agora. Por favor, tente mais tarde.')),
+          SnackBar(
+              content: Text(
+                  'O sistema está sendo configurado. Tente novamente em breve.')),
         );
       }
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Verifique suas credenciais e tente novamente.')),
-      );
+      return;
     }
-  } catch (e) {
-    logger.e('Erro ao fazer login: $e');
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Não foi possível realizar o login. Por favor, tente novamente.')),
-    );
-  }
-}
 
+    if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Por favor, preencha seu e-mail e senha.')),
+        );
+      }
+      return;
+    }
+
+    try {
+      // Faz o login com o Cognito
+      SignInResult result = await Amplify.Auth.signIn(
+        username: _emailController.text.trim(),
+        password: _passwordController.text.trim(),
+      );
+
+      if (result.isSignedIn) {
+        // Obtém a sessão do usuário para acessar o token JWT
+        var session =
+            await Amplify.Auth.fetchAuthSession() as CognitoAuthSession;
+
+        // ignore: unnecessary_null_comparison
+        if (session.userPoolTokensResult.value != null) {
+          String jwtToken = session.userPoolTokensResult.value.idToken.raw;
+
+          var userAttributes = await Amplify.Auth.fetchUserAttributes();
+
+          var subAttribute = userAttributes.firstWhere(
+            (attr) => attr.userAttributeKey == AuthUserAttributeKey.sub,
+            orElse: () => AuthUserAttribute(
+                userAttributeKey: AuthUserAttributeKey.sub, value: ''),
+          );
+
+          if (subAttribute.value.isNotEmpty) {
+            String userId = subAttribute.value;
+            String name = userAttributes
+                .firstWhere(
+                  (attr) => attr.userAttributeKey == AuthUserAttributeKey.name,
+                  orElse: () => AuthUserAttribute(
+                      userAttributeKey: AuthUserAttributeKey.name, value: ''),
+                )
+                .value;
+            String email = userAttributes
+                .firstWhere(
+                  (attr) => attr.userAttributeKey == AuthUserAttributeKey.email,
+                  orElse: () => AuthUserAttribute(
+                      userAttributeKey: AuthUserAttributeKey.email, value: ''),
+                )
+                .value;
+            String birthdate = userAttributes
+                .firstWhere(
+                  (attr) =>
+                      attr.userAttributeKey == AuthUserAttributeKey.birthdate,
+                  orElse: () => AuthUserAttribute(
+                      userAttributeKey: AuthUserAttributeKey.birthdate,
+                      value: ''),
+                )
+                .value;
+            String phoneNumber = userAttributes
+                .firstWhere(
+                  (attr) =>
+                      attr.userAttributeKey == AuthUserAttributeKey.phoneNumber,
+                  orElse: () => AuthUserAttribute(
+                      userAttributeKey: AuthUserAttributeKey.phoneNumber,
+                      value: ''),
+                )
+                .value;
+
+            Map<String, dynamic> requestBody = {
+              "userId": userId,
+              "payload": {
+                "name": name,
+                "email": email,
+                "birthdate": birthdate,
+                "phone_number": phoneNumber,
+              }
+            };
+
+            String jsonBody = jsonEncode(requestBody);
+
+            await _sendJwtToApiGateway(jwtToken, jsonBody);
+
+            if (mounted) {
+              Navigator.pushReplacement(context, MaterialPageRoute(
+                builder: (context) {
+                  return CreditPurchaseScreen(
+                    amplifyConfigured: widget.amplifyConfigured,
+                  );
+                },
+              ));
+            }
+          } else {
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                    content: Text(
+                        'Não foi possível obter suas informações. Tente novamente.')),
+              );
+            }
+          }
+        } else {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                  content: Text(
+                      'Não foi possível obter o token JWT. Por favor, tente novamente.')),
+            );
+          }
+        }
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+                content: Text('Verifique suas credenciais e tente novamente.')),
+          );
+        }
+      }
+    } catch (e) {
+      logger.e('Erro ao fazer login: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text(
+                  'Não foi possível realizar o login. Por favor, tente novamente.')),
+        );
+      }
+    }
+  }
 
   void _createAccount() {
     Navigator.push(
