@@ -2,7 +2,6 @@ import 'package:chopeira_smart_app/screens/app_logo.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:amplify_flutter/amplify_flutter.dart';
-import 'package:amplify_auth_cognito/amplify_auth_cognito.dart';
 import 'package:chopeira_smart_app/screens/confirm_account_screen.dart';
 import 'package:flutter/services.dart';
 import 'package:logger/logger.dart';
