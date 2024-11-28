@@ -18,8 +18,7 @@ class LoginScreen extends StatefulWidget {
   LoginScreenState createState() => LoginScreenState();
 }
 
-class LoginScreenState extends State<LoginScreen>
-    with SingleTickerProviderStateMixin {
+class LoginScreenState extends State<LoginScreen > with SingleTickerProviderStateMixin {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
 
