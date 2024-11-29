@@ -3,18 +3,14 @@ import 'dart:typed_data';
 import 'beer_filling_animation_without_logo.dart'; // Import da animação
 import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:logger/logger.dart';
 
 class DrinkSelectionScreen extends StatefulWidget {
-  const DrinkSelectionScreen({super.key});
-
   @override
   DrinkSelectionScreenState createState() => DrinkSelectionScreenState();
 }
 
 class DrinkSelectionScreenState extends State<DrinkSelectionScreen>
     with TickerProviderStateMixin {
-  final Logger logger = Logger();
   final List<Map<String, dynamic>> drinks = [
     {
       "name": "Chopp Brahma",
@@ -68,12 +64,10 @@ class DrinkSelectionScreenState extends State<DrinkSelectionScreen>
       ].request();
 
       if (status.values.any((perm) => perm.isDenied)) {
-        if (!mounted) return;
         _showPermissionDeniedDialog();
         return;
       }
 
-      if (!mounted) return;
       setState(() {
         _connectionStatus = "Buscando dispositivos Bluetooth...";
       });
@@ -86,32 +80,19 @@ class DrinkSelectionScreenState extends State<DrinkSelectionScreen>
       );
 
       connection = await BluetoothConnection.toAddress(hc05.address);
-
-      if (!mounted) return;
       setState(() {
         _connectionStatus = "Conectado ao HC-05!";
       });
 
       _listenToBluetoothData();
     } catch (e) {
-      if (!mounted) return;
       setState(() {
         _connectionStatus = "Erro ao conectar: $e";
       });
-
-      if (!mounted) return;
-      _showSnackBarSafely("Erro ao conectar ao bluetooth: $e");
-    }
-  }
-
-  void _showSnackBarSafely(String message) {
-    if (!mounted) return;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message)),
+        SnackBar(content: Text("Erro ao conectar ao Bluetooth: $e")),
       );
-    });
+    }
   }
 
   void _listenToBluetoothData() {
@@ -123,61 +104,51 @@ class DrinkSelectionScreenState extends State<DrinkSelectionScreen>
         final message = _buffer.substring(0, index).trim();
         _buffer = _buffer.substring(index + 1);
 
-        logger.i('Mensagem recebida: $message');
+        print('Mensagem recebida: $message');
 
         if (message.startsWith("Temperatura:")) {
-          final temp =
-              message.split(":")[1].replaceAll(RegExp(r'[^\d.]'), '').trim();
-          if (mounted) {
-            setState(() {
-              _temperature = "$temp °C";
-            });
-          }
+          final temp = message
+              .split(":")[1]
+              .replaceAll(RegExp(r'[^\d.]'), '')
+              .trim();
+          setState(() {
+            _temperature = "$temp °C";
+          });
         } else if (message.startsWith("Fluxo:")) {
           final flow = message
               .split(":")[1]
-              .replaceAll(
-                  RegExp(r'[^\d.]'), '') // Remove caracteres indesejados
+              .replaceAll(RegExp(r'[^\d.]'), '') // Remove caracteres indesejados
               .trim();
-          if (mounted) {
-            setState(() {
-              _flowRate =
-                  double.tryParse(flow) ?? 0.0; // Atualiza o fluxo em L/min
-              logger.i('Fluxo recebido: $_flowRate L/min');
-            });
-          }
+          setState(() {
+            _flowRate = double.tryParse(flow) ?? 0.0; // Atualiza o fluxo em L/min
+            print('Fluxo recebido: $_flowRate L/min');
+          });
         } else if (message.startsWith("Volume:")) {
           final volume = message
               .split(":")[1]
-              .replaceAll(
-                  RegExp(r'[^\d.]'), '') // Remove caracteres indesejados
+              .replaceAll(RegExp(r'[^\d.]'), '') // Remove caracteres indesejados
               .trim();
-          if (mounted) {
-            setState(() {
-              _volume =
-                  double.tryParse(volume) ?? 0.0; // Atualiza o volume total
-              // Atualiza os créditos
-              _credits -= (_volume * _price) / 1000;
-              if (_credits < 0) _credits = 0;
-              logger.i('Volume recebido: $_volume mL');
-            });
-          }
+          setState(() {
+            _volume = double.tryParse(volume) ?? 0.0; // Atualiza o volume total
+            // Atualiza os créditos
+            _credits -= (_volume * _price) / 1000;
+            if (_credits < 0) _credits = 0;
+            print('Volume recebido: $_volume mL');
+          });
         } else if (message.startsWith("Créditos:")) {
           final credit = message.split(":")[1].trim();
-          if (mounted) {
-            setState(() {
-              _credits = double.tryParse(credit) ?? 0.0;
-            });
-          }
+          setState(() {
+            _credits = double.tryParse(credit) ?? 0.0;
+          });
         }
       }
     }).onDone(() {
-      if (mounted) {
-        setState(() {
-          _connectionStatus = "Conexão encerrada.";
-        });
-        _showSnackBarSafely("Conexão Bluetooth encerrada.");
-      }
+      setState(() {
+        _connectionStatus = "Conexão encerrada.";
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Conexão Bluetooth encerrada.")),
+      );
     });
   }
 
@@ -185,7 +156,7 @@ class DrinkSelectionScreenState extends State<DrinkSelectionScreen>
     if (connection != null && connection!.isConnected) {
       connection?.output.add(Uint8List.fromList(command.codeUnits));
       connection?.output.allSent;
-      logger.i("Comando enviado: $command");
+      print("Comando enviado: $command");
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Bluetooth não conectado.")),
@@ -194,10 +165,21 @@ class DrinkSelectionScreenState extends State<DrinkSelectionScreen>
   }
 
   void _selectDrink(int index) {
+  if (_selectedDrinkIndex == index) {
+    // Desselecionar a bebida
+    setState(() {
+      _selectedDrinkIndex = -1;
+      _shouldShowAnimation = false;
+    });
+    if (index == 0) {
+      // Fecha a solenoide somente se for a bebida "Chopp Brahma"
+      _sendCommand("SOLENOID_OFF");
+    }
+  } else {
+    // Selecionar uma bebida
     if (_credits <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-            content: Text("Créditos insuficientes para abrir a solenoide.")),
+        SnackBar(content: Text("Créditos insuficientes para abrir a solenoide.")),
       );
       return;
     }
@@ -208,8 +190,12 @@ class DrinkSelectionScreenState extends State<DrinkSelectionScreen>
       _price = drinks[index]['price']; // Define o preço da bebida selecionada
     });
 
-    _sendCommand("SOLENOID${index + 1}_ON");
+    if (index == 0) {
+      // Abre a solenoide apenas para "Chopp Brahma"
+      _sendCommand("SOLENOID_ON");
+    }
   }
+}
 
   void _showPermissionDeniedDialog() {
     showDialog(
@@ -289,7 +275,7 @@ class DrinkSelectionScreenState extends State<DrinkSelectionScreen>
                       color: Colors.black),
                 ),
                 SizedBox(height: 20),
-                SizedBox(
+                Container(
                   height: 300,
                   child: ListView.builder(
                     scrollDirection: Axis.horizontal,
@@ -384,22 +370,9 @@ class DrinkSelectionScreenState extends State<DrinkSelectionScreen>
                       Text("Preço por mL: R\$ ${_price.toStringAsFixed(2)}",
                           style: TextStyle(fontSize: 18)),
                       Text("Créditos: R\$ ${_credits.toStringAsFixed(2)}",
-                          style: TextStyle(fontSize: 18, color: Colors.green)),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          ElevatedButton(
-                            onPressed: () => _sendCommand("SOLENOID_ON"),
-                            child: Text("Abrir Solenoide"),
-                          ),
-                          SizedBox(width: 10),
-                          ElevatedButton(
-                            onPressed: () => _sendCommand("SOLENOID_OFF"),
-                            child: Text("Fechar Solenoide"),
-                          ),
-                        ],
-                      ),
-                    ],
+                          style: TextStyle(
+                              fontSize: 18, color: Colors.green)),
+                      ],
                   ),
                 ),
               ],
