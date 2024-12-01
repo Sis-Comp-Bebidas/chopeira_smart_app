@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
 import 'dart:typed_data';
-import 'beer_filling_animation_without_logo.dart'; // Import da animação
+import 'dart:async';
+import 'beer_filling_animation_without_logo.dart';
 import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:logger/logger.dart';
 
 class DrinkSelectionScreen extends StatefulWidget {
+  const DrinkSelectionScreen({super.key});
+
   @override
   DrinkSelectionScreenState createState() => DrinkSelectionScreenState();
 }
@@ -15,7 +19,7 @@ class DrinkSelectionScreenState extends State<DrinkSelectionScreen>
     {
       "name": "Chopp Brahma",
       "type": "Chopp",
-      "price": 0.60,
+      "price": 0.03, // Preço por mL em reais
       "image": "assets/images/choppb.jpg"
     },
     {
@@ -38,11 +42,12 @@ class DrinkSelectionScreenState extends State<DrinkSelectionScreen>
   String _connectionStatus = "Solicitando permissões...";
   BluetoothConnection? connection;
 
-  String _buffer = ""; // Buffer para armazenar dados recebidos
-  double _credits = 15.0; // Créditos iniciais do cliente
-  double _volume = 0.0; // Volume em mililitros
-  double _price = 0.0; // Preço por mililitro da bebida selecionada
+  String _buffer = "";
+  double _credits = 15.0; // Créditos iniciais
+  double _volume = 0.0; // Volume total em mililitros
+  double _price = 0.0; // Preço por mL da bebida selecionada
   double _flowRate = 0.0; // Fluxo em L/min
+  Timer? _creditUpdateTimer;
 
   @override
   void initState() {
@@ -56,7 +61,6 @@ class DrinkSelectionScreenState extends State<DrinkSelectionScreen>
     });
 
     try {
-      // Solicita permissões
       final status = await [
         Permission.location,
         Permission.bluetoothConnect,
@@ -64,7 +68,7 @@ class DrinkSelectionScreenState extends State<DrinkSelectionScreen>
       ].request();
 
       if (status.values.any((perm) => perm.isDenied)) {
-        _showPermissionDeniedDialog();
+        if (mounted) _showPermissionDeniedDialog();
         return;
       }
 
@@ -72,7 +76,6 @@ class DrinkSelectionScreenState extends State<DrinkSelectionScreen>
         _connectionStatus = "Buscando dispositivos Bluetooth...";
       });
 
-      // Conecta ao HC-05
       final devices = await FlutterBluetoothSerial.instance.getBondedDevices();
       final hc05 = devices.firstWhere(
         (device) => device.name == "HC-05",
@@ -80,75 +83,105 @@ class DrinkSelectionScreenState extends State<DrinkSelectionScreen>
       );
 
       connection = await BluetoothConnection.toAddress(hc05.address);
-      setState(() {
-        _connectionStatus = "Conectado ao HC-05!";
-      });
+
+      if (mounted) {
+        setState(() {
+          _connectionStatus = "Conectado ao HC-05!";
+        });
+      }
 
       _listenToBluetoothData();
     } catch (e) {
-      setState(() {
-        _connectionStatus = "Erro ao conectar: $e";
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Erro ao conectar ao Bluetooth: $e")),
-      );
+      if (mounted) {
+        setState(() {
+          _connectionStatus = "Erro ao conectar: $e";
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Erro ao conectar ao Bluetooth: $e")),
+        );
+      }
     }
   }
 
+  final Logger logger = Logger();
+
   void _listenToBluetoothData() {
     connection?.input?.listen((data) {
-      _buffer += String.fromCharCodes(data); // Adiciona os dados ao buffer
+      _buffer += String.fromCharCodes(data);
 
       while (_buffer.contains("\n")) {
         final index = _buffer.indexOf("\n");
         final message = _buffer.substring(0, index).trim();
         _buffer = _buffer.substring(index + 1);
 
-        print('Mensagem recebida: $message');
+        logger.i('Mensagem recebida: $message');
 
         if (message.startsWith("Temperatura:")) {
-          final temp = message
-              .split(":")[1]
-              .replaceAll(RegExp(r'[^\d.]'), '')
-              .trim();
-          setState(() {
-            _temperature = "$temp °C";
-          });
+          final temp =
+              message.split(":")[1].replaceAll(RegExp(r'[^\d.]'), '').trim();
+          if (mounted) {
+            setState(() {
+              _temperature = "$temp °C";
+            });
+          }
         } else if (message.startsWith("Fluxo:")) {
-          final flow = message
-              .split(":")[1]
-              .replaceAll(RegExp(r'[^\d.]'), '') // Remove caracteres indesejados
-              .trim();
-          setState(() {
-            _flowRate = double.tryParse(flow) ?? 0.0; // Atualiza o fluxo em L/min
-            print('Fluxo recebido: $_flowRate L/min');
-          });
+          final flow =
+              message.split(":")[1].replaceAll(RegExp(r'[^\d.]'), '').trim();
+          if (mounted) {
+            setState(() {
+              _flowRate = double.tryParse(flow) ?? 0.0;
+            });
+          }
         } else if (message.startsWith("Volume:")) {
-          final volume = message
-              .split(":")[1]
-              .replaceAll(RegExp(r'[^\d.]'), '') // Remove caracteres indesejados
-              .trim();
-          setState(() {
-            _volume = double.tryParse(volume) ?? 0.0; // Atualiza o volume total
-            // Atualiza os créditos
-            _credits -= (_volume * _price) / 1000;
-            if (_credits < 0) _credits = 0;
-            print('Volume recebido: $_volume mL');
-          });
-        } else if (message.startsWith("Créditos:")) {
-          final credit = message.split(":")[1].trim();
-          setState(() {
-            _credits = double.tryParse(credit) ?? 0.0;
-          });
+          final volume =
+              message.split(":")[1].replaceAll(RegExp(r'[^\d.]'), '').trim();
+          if (mounted) {
+            setState(() {
+              _volume = double.tryParse(volume) ?? 0.0;
+            });
+          }
         }
       }
     }).onDone(() {
+      if (mounted) {
+        setState(() {
+          _connectionStatus = "Desconectado";
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Conexão Bluetooth encerrada.")),
+        );
+      }
+    });
+  }
+
+  void _startCreditUpdateTimer() {
+    _creditUpdateTimer?.cancel(); // Cancela qualquer timer anterior
+
+    _creditUpdateTimer = Timer.periodic(Duration(milliseconds: 100), (timer) {
+      if (_selectedDrinkIndex == -1 || _price <= 0) {
+        return; // Não atualiza créditos se nenhuma bebida estiver selecionada
+      }
+
+      // Calcula o custo total com base no volume atual (diretamente em mL)
+      final totalCost = _volume * _price; // R$
+
       setState(() {
-        _connectionStatus = "Conexão encerrada.";
+        _credits = 15.0 - totalCost; // Créditos iniciais menos o custo atual
+        if (_credits <= 0) {
+          _credits = 0; // Evita créditos negativos
+          _sendCommand("SOLENOID_OFF"); // Fecha a solenoide
+          timer.cancel(); // Cancela o timer quando os créditos acabam
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+                content: Text(
+                    "Créditos esgotados. Por favor, adicione mais créditos.")),
+          );
+        }
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Conexão Bluetooth encerrada.")),
-      );
+
+      logger.i("Volume Total: ${_volume.toStringAsFixed(2)} mL");
+      logger.i("Custo Total: R\$ ${totalCost.toStringAsFixed(2)}");
+      logger.i("Créditos Restantes: R\$ ${_credits.toStringAsFixed(2)}");
     });
   }
 
@@ -156,7 +189,7 @@ class DrinkSelectionScreenState extends State<DrinkSelectionScreen>
     if (connection != null && connection!.isConnected) {
       connection?.output.add(Uint8List.fromList(command.codeUnits));
       connection?.output.allSent;
-      print("Comando enviado: $command");
+      logger.i("Comando enviado: $command");
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Bluetooth não conectado.")),
@@ -165,37 +198,34 @@ class DrinkSelectionScreenState extends State<DrinkSelectionScreen>
   }
 
   void _selectDrink(int index) {
-  if (_selectedDrinkIndex == index) {
-    // Desselecionar a bebida
-    setState(() {
-      _selectedDrinkIndex = -1;
-      _shouldShowAnimation = false;
-    });
-    if (index == 0) {
-      // Fecha a solenoide somente se for a bebida "Chopp Brahma"
+    if (_selectedDrinkIndex == index) {
+      setState(() {
+        _selectedDrinkIndex = -1;
+        _shouldShowAnimation = false;
+        _flowRate = 0.0;
+        _volume = 0.0;
+      });
       _sendCommand("SOLENOID_OFF");
-    }
-  } else {
-    // Selecionar uma bebida
-    if (_credits <= 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Créditos insuficientes para abrir a solenoide.")),
-      );
-      return;
-    }
+      _creditUpdateTimer?.cancel();
+    } else {
+      if (_credits <= 0) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text("Créditos insuficientes para abrir a solenoide.")),
+        );
+        return;
+      }
 
-    setState(() {
-      _selectedDrinkIndex = index;
-      _shouldShowAnimation = true;
-      _price = drinks[index]['price']; // Define o preço da bebida selecionada
-    });
+      setState(() {
+        _selectedDrinkIndex = index;
+        _shouldShowAnimation = true;
+        _price = drinks[index]['price'];
+      });
 
-    if (index == 0) {
-      // Abre a solenoide apenas para "Chopp Brahma"
       _sendCommand("SOLENOID_ON");
+      _startCreditUpdateTimer();
     }
   }
-}
 
   void _showPermissionDeniedDialog() {
     showDialog(
@@ -215,7 +245,7 @@ class DrinkSelectionScreenState extends State<DrinkSelectionScreen>
             TextButton(
               child: Text("Configurações"),
               onPressed: () {
-                openAppSettings(); // Abre as configurações do app
+                openAppSettings();
                 Navigator.of(context).pop();
               },
             ),
@@ -227,6 +257,7 @@ class DrinkSelectionScreenState extends State<DrinkSelectionScreen>
 
   @override
   void dispose() {
+    _creditUpdateTimer?.cancel();
     connection?.dispose();
     super.dispose();
   }
@@ -275,7 +306,7 @@ class DrinkSelectionScreenState extends State<DrinkSelectionScreen>
                       color: Colors.black),
                 ),
                 SizedBox(height: 20),
-                Container(
+                SizedBox(
                   height: 300,
                   child: ListView.builder(
                     scrollDirection: Axis.horizontal,
@@ -363,16 +394,15 @@ class DrinkSelectionScreenState extends State<DrinkSelectionScreen>
                     children: [
                       Text("Temperatura: $_temperature",
                           style: TextStyle(fontSize: 18)),
-                      Text("Fluxo: $_flowRate L/min",
+                      Text("Fluxo: ${_flowRate.toStringAsFixed(2)} L/min",
                           style: TextStyle(fontSize: 18, color: Colors.blue)),
-                      Text("Volume Total: $_volume mL",
+                      Text("Volume Total: ${_volume.toStringAsFixed(2)} mL",
                           style: TextStyle(fontSize: 18)),
                       Text("Preço por mL: R\$ ${_price.toStringAsFixed(2)}",
                           style: TextStyle(fontSize: 18)),
                       Text("Créditos: R\$ ${_credits.toStringAsFixed(2)}",
-                          style: TextStyle(
-                              fontSize: 18, color: Colors.green)),
-                      ],
+                          style: TextStyle(fontSize: 18, color: Colors.green)),
+                    ],
                   ),
                 ),
               ],
